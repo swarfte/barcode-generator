@@ -30,15 +30,15 @@ function barcodeOptions(width: number, scale = 1): BarcodeOptions {
   return {
     format: 'CODE128',
     width: width * scale,
-    height: 180 * scale,
+    height: 90 * scale,
     displayValue: true,
-    fontSize: 28 * scale,
+    fontSize: 18 * scale,
     fontOptions: 'bold',
     font: 'monospace',
     textAlign: 'center',
     textPosition: 'bottom',
-    textMargin: 8,
-    margin: 24 * scale,
+    textMargin: 6,
+    margin: 10 * scale,
     background: '#ffffff',
     lineColor: '#000000',
   }
@@ -102,9 +102,6 @@ function removeItem(item: BarcodeItem) {
       <h1 class="hero-title">
         Barcode Generator
       </h1>
-      <p class="hero-subtitle">
-        輸入 Equipment ID，即可以 CODE128 格式產生條碼，方便用手機掃描或列印標籤
-      </p>
     </header>
 
     <main class="content">
@@ -172,7 +169,7 @@ function removeItem(item: BarcodeItem) {
           <template #header>
             <div class="result-header">
               <span>CODE128 條碼</span>
-              <el-button type="primary" plain size="default" @click="downloadPng(item)">
+              <el-button type="primary" plain size="small" @click="downloadPng(item)">
                 下載 PNG
               </el-button>
             </div>
@@ -210,24 +207,17 @@ function removeItem(item: BarcodeItem) {
 
 /* Hero */
 .hero {
-  padding: 48px 32px 40px;
+  padding: 14px 32px;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
   color: #fff;
   text-align: center;
 }
 
 .hero-title {
-  font-size: 38px;
+  font-size: 20px;
   font-weight: 700;
-  margin: 0 0 12px;
-  letter-spacing: -0.5px;
-}
-
-.hero-subtitle {
-  font-size: 15px;
-  line-height: 1.6;
-  opacity: 0.82;
   margin: 0;
+  letter-spacing: -0.5px;
 }
 
 /* Content */
@@ -236,12 +226,16 @@ function removeItem(item: BarcodeItem) {
   width: 100%;
   max-width: 960px;
   margin: 0 auto;
-  padding: 32px 24px 48px;
+  padding: 16px 24px 24px;
 }
 
 .input-card {
   border-radius: 12px;
   border: 1px solid #e5e7eb;
+}
+
+.input-card :deep(.el-card__body) {
+  padding: 12px 16px;
 }
 
 .input-row {
@@ -268,8 +262,8 @@ function removeItem(item: BarcodeItem) {
 }
 
 .global-size-row {
-  margin-bottom: 24px;
-  padding: 16px 20px;
+  margin-bottom: 12px;
+  padding: 10px 20px;
   background: #ffffff;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
@@ -290,7 +284,7 @@ function removeItem(item: BarcodeItem) {
 }
 
 .barcode-group {
-  margin-bottom: 32px;
+  margin-bottom: 14px;
 }
 
 .barcode-group:last-child {
@@ -299,9 +293,17 @@ function removeItem(item: BarcodeItem) {
 
 /* Result */
 .result-card {
-  margin-top: 24px;
+  margin-top: 12px;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
+}
+
+.result-card :deep(.el-card__header) {
+  padding: 8px 16px;
+}
+
+.result-card :deep(.el-card__body) {
+  padding: 8px;
 }
 
 .result-header {
@@ -309,6 +311,7 @@ function removeItem(item: BarcodeItem) {
   justify-content: space-between;
   align-items: center;
   font-weight: 600;
+  font-size: 13px;
   color: #1e293b;
 }
 
@@ -317,18 +320,19 @@ function removeItem(item: BarcodeItem) {
   border-radius: 8px;
   display: flex;
   justify-content: center;
-  padding: 8px;
+  padding: 4px;
 }
 
 .barcode-svg {
   max-width: 100%;
+  max-height: 140px;
   height: auto;
 }
 
 /* Empty state */
 .empty-hint {
-  margin-top: 24px;
-  padding: 64px 24px;
+  margin-top: 12px;
+  padding: 24px 24px;
   text-align: center;
   color: #94a3b8;
   border: 1px dashed #d3dce6;
@@ -336,15 +340,20 @@ function removeItem(item: BarcodeItem) {
 }
 
 .empty-hint p {
-  margin: 12px 0 0;
-  font-size: 14px;
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
+.empty-hint svg {
+  width: 28px;
+  height: 28px;
 }
 
 /* Footer */
 .footer {
-  padding: 20px;
+  padding: 10px;
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   color: #94a3b8;
   display: flex;
   justify-content: center;
