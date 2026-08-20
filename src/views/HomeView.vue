@@ -53,7 +53,7 @@ function renderBarcode(item: BarcodeItem) {
 function generate(item: BarcodeItem) {
   const value = item.equipmentId.trim()
   if (!value) {
-    item.errorMessage = '請先輸入 Equipment ID'
+    item.errorMessage = 'Please enter an Equipment ID first'
     item.lastGenerated = ''
     return
   }
@@ -62,7 +62,7 @@ function generate(item: BarcodeItem) {
     renderBarcode(item)
     item.errorMessage = ''
   } catch {
-    item.errorMessage = '此內容無法用 CODE128 編碼（僅支援 ASCII 字元）'
+    item.errorMessage = 'This value cannot be encoded as CODE128 (ASCII characters only)'
     item.lastGenerated = ''
   }
 }
@@ -106,7 +106,7 @@ function removeItem(item: BarcodeItem) {
 
     <main class="content">
       <div class="size-row global-size-row">
-        <span class="size-label">條碼大小</span>
+        <span class="size-label">Barcode Size</span>
         <el-slider
           v-model="barWidth"
           :min="2"
@@ -126,12 +126,12 @@ function removeItem(item: BarcodeItem) {
             <el-input
               v-model="item.equipmentId"
               size="large"
-              placeholder="請輸入 Equipment ID，例如：EQP-A001-001"
+              placeholder="Enter an Equipment ID, e.g. EQP-A001-001"
               clearable
               @keyup.enter="generate(item)"
             />
             <el-button type="primary" size="large" @click="generate(item)">
-              產生條碼
+              Generate
             </el-button>
             <el-button
               circle
@@ -164,13 +164,13 @@ function removeItem(item: BarcodeItem) {
           />
         </el-card>
 
-        <!-- Result：用 v-show 讓 svg 常駐 DOM，generate() 才能立即拿到 ref 渲染 -->
+        <!-- Result: use v-show to keep the svg mounted so generate() can grab its ref immediately -->
         <el-card v-show="item.lastGenerated" shadow="never" class="result-card">
           <template #header>
             <div class="result-header">
-              <span>CODE128 條碼</span>
+              <span>CODE128 Barcode</span>
               <el-button type="primary" plain size="small" @click="downloadPng(item)">
-                下載 PNG
+                Download PNG
               </el-button>
             </div>
           </template>
@@ -184,7 +184,7 @@ function removeItem(item: BarcodeItem) {
           <svg viewBox="0 0 24 24" width="46" height="46" fill="#c0c4cc">
             <path d="M2 4h2v16H2V4zm4 0h1v16H6V4zm3 0h2v16H9V4zm4 0h1v16h-1V4zm3 0h2v16h-2V4zm4 0h1v16h-1V4zM13 4h1v16h-1V4z" />
           </svg>
-          <p>產生的條碼會顯示在這裡</p>
+          <p>Generated barcodes will appear here</p>
         </div>
       </div>
     </main>

@@ -7,9 +7,9 @@ A single-page Vue 3 app for generating CODE128 barcodes from equipment IDs. Ente
 ## Features
 
 - **Multiple barcodes at once** — add/remove rows to generate several barcodes in one session (`+` / `−` buttons, at least one row is always kept).
-- **Live CODE128 rendering** — barcodes are drawn with [JsBarcode](https://github.com/lindell/JsBarcode) directly onto an on-screen SVG as soon as you click "產生條碼" (Generate).
-- **Adjustable size** — a single "條碼大小" (barcode size) slider (S/M/L/XL/XXL) controls bar width for all rows and re-renders them immediately.
-- **PNG export** — "下載 PNG" (Download PNG) re-renders each barcode onto an off-screen canvas at 3x scale for a sharper download than the on-screen preview.
+- **Live CODE128 rendering** — barcodes are drawn with [JsBarcode](https://github.com/lindell/JsBarcode) directly onto an on-screen SVG as soon as you click "Generate".
+- **Adjustable size** — a single "Barcode Size" slider (S/M/L/XL/XXL) controls bar width for all rows and re-renders them immediately.
+- **PNG export** — "Download PNG" re-renders each barcode onto an off-screen canvas at 3x scale for a sharper download than the on-screen preview.
 - **Inline validation** — empty input or characters CODE128 can't encode (non-ASCII) surface an inline error instead of a broken barcode.
 
 ## Tech Stack
@@ -74,7 +74,7 @@ All real logic lives in `src/views/HomeView.vue`; no other views/routes have bee
 - **Element Plus components are auto-imported** — do not import/register `<el-*>` components manually in templates (`unplugin-vue-components` + `ElementPlusResolver` handles it via `vite.config.ts`). Only imperative APIs (`ElMessage`, `ElMessageBox`, `ElNotification`) need explicit imports from `'element-plus'`.
 - **`@/` alias** maps to `src/` (configured in both `vite.config.ts` and `tsconfig.app.json`).
 - **Pinia is wired up but unused** — no stores exist yet. If adding one, note the persist plugin must register on `pinia` *before* `app.use(pinia)` in `src/main.ts`.
-- User-facing strings (labels, placeholders, error messages) are in Traditional Chinese.
+- User-facing strings (labels, placeholders, error messages) are in English.
 
 ### Generated files (do not hand-edit)
 
