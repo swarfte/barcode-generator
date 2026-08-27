@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useNow } from '@vueuse/core'
 import { ElMessageBox } from 'element-plus'
 import JsBarcode from 'jsbarcode'
@@ -226,17 +226,19 @@ function downloadPng(record: Record) {
   link.click()
 }
 
-// Switching profiles rebuilds the <svg> elements through v-for; re-render generated barcodes onto the fresh elements
-watch(
-  () => store.activeProfileId,
-  async () => {
-    await nextTick()
-    for (const record of activeRecords.value) {
-      const runtime = runtimeMap.get(record.id)
-      if (runtime?.lastGenerated) renderBarcode(record.id, runtime.lastGenerated)
-    }
-  },
-)
+// Records with a code render their barcodes automatically, so no manual Generate click is needed
+// after a profile switch or a page reload. Empty records keep their clean empty state.
+async function autoGenerateAll() {
+  await nextTick()
+  for (const record of activeRecords.value) {
+    if (record.code.trim()) generate(record)
+  }
+}
+
+// Switching profiles rebuilds the <svg> elements through v-for, so wait for the new refs before rendering
+watch(() => store.activeProfileId, autoGenerateAll)
+
+onMounted(autoGenerateAll)
 </script>
 
 <template>
