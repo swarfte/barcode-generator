@@ -23,7 +23,7 @@ const activeRecords = computed(() => store.activeProfile?.records ?? [])
 
 const now = useNow({ interval: 30_000 })
 
-/* ---------- 側邊欄（Notion 風格目錄） ---------- */
+/* ---------- Sidebar (Notion-style directory) ---------- */
 
 const expanded = reactive(new Set<string>([store.activeProfileId]))
 const editingProfileId = ref('')
@@ -64,12 +64,16 @@ function commitRename() {
   store.renameProfile(profileId, editingName.value)
 }
 
+function cancelRename() {
+  editingProfileId.value = ''
+}
+
 async function confirmDelete(message: string) {
   try {
-    await ElMessageBox.confirm(message, '刪除確認', {
+    await ElMessageBox.confirm(message, 'Delete Confirmation', {
       type: 'warning',
-      confirmButtonText: '刪除',
-      cancelButtonText: '取消',
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
     })
     return true
   } catch {
@@ -81,9 +85,10 @@ async function removeProfile(profileId: string) {
   const profile = store.profiles.find((item) => item.id === profileId)
   if (!profile) return
   const hasData = profile.records.some((record) => record.code.trim())
+  const recordWord = profile.records.length === 1 ? 'record' : 'records'
   const message = hasData
-    ? `確定刪除設定檔「${profile.name}」？內含 ${profile.records.length} 筆記錄，刪除後無法復原。`
-    : `確定刪除設定檔「${profile.name}」？`
+    ? `Delete profile "${profile.name}"? It contains ${profile.records.length} ${recordWord} and cannot be undone.`
+    : `Delete profile "${profile.name}"?`
   if (!(await confirmDelete(message))) return
   if (editingProfileId.value === profileId) editingProfileId.value = ''
   expanded.delete(profileId)
@@ -120,28 +125,28 @@ function scrollToRecord(recordId: string) {
 
 async function removeRecord(record: Record) {
   const code = record.code.trim()
-  if (code && !(await confirmDelete(`確定刪除記錄「${code}」？`))) return
+  if (code && !(await confirmDelete(`Delete record "${code}"?`))) return
   runtimeMap.delete(record.id)
   svgRefs.delete(record.id)
   store.deleteRecord(record.id)
 }
 
 function formatRelativeTime(timestamp: number) {
-  if (!timestamp) return '尚未更新'
+  if (!timestamp) return 'Not updated yet'
   const diff = now.value.getTime() - timestamp
-  if (diff < 60_000) return '剛剛更新'
+  if (diff < 60_000) return 'Updated just now'
   const minutes = Math.floor(diff / 60_000)
-  if (minutes < 60) return `${minutes} 分鐘前更新`
+  if (minutes < 60) return `Updated ${minutes} min ago`
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours} 小時前更新`
+  if (hours < 24) return `Updated ${hours} hr ago`
   const days = Math.floor(hours / 24)
-  if (days < 7) return `${days} 天前更新`
+  if (days < 7) return `Updated ${days} ${days === 1 ? 'day' : 'days'} ago`
   const date = new Date(timestamp)
   const pad = (value: number) => String(value).padStart(2, '0')
-  return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} 更新`
+  return `Updated on ${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`
 }
 
-/* ---------- 條碼產生（runtime 狀態不持久化；產生條碼不影響 lastUpdated） ---------- */
+/* ---------- Barcode generation (runtime state is not persisted; generating never touches lastUpdated) ---------- */
 
 const runtimeMap = reactive(new Map<string, RecordRuntime>())
 const svgRefs = new Map<string, SVGSVGElement>()
@@ -188,7 +193,7 @@ function generate(record: Record) {
   const runtime = getRuntime(record.id)
   const value = record.code.trim()
   if (!value) {
-    runtime.errorMessage = '請先輸入 Equipment ID'
+    runtime.errorMessage = 'Please enter an Equipment ID first'
     runtime.lastGenerated = ''
     return
   }
@@ -197,7 +202,7 @@ function generate(record: Record) {
     renderBarcode(record.id, value)
     runtime.errorMessage = ''
   } catch {
-    runtime.errorMessage = '此內容無法用 CODE128 編碼（僅支援 ASCII 字元）'
+    runtime.errorMessage = 'This value cannot be encoded as CODE128 (ASCII characters only)'
     runtime.lastGenerated = ''
   }
 }
@@ -221,7 +226,7 @@ function downloadPng(record: Record) {
   link.click()
 }
 
-// 切換設定檔後 v-for 會重建 <svg>，需把已產生的條碼重新渲染到新的元素上
+// Switching profiles rebuilds the <svg> elements through v-for; re-render generated barcodes onto the fresh elements
 watch(
   () => store.activeProfileId,
   async () => {
@@ -243,11 +248,11 @@ watch(
     </header>
 
     <main class="layout">
-      <!-- 左欄：設定檔目錄（Notion 風格） -->
+      <!-- Left column: profile directory (Notion style) -->
       <aside class="sidebar">
         <div class="sidebar-header">
-          <span class="sidebar-title">設定檔</span>
-          <button class="icon-btn" title="新增設定檔" @click="addProfile">
+          <span class="sidebar-title">Profiles</span>
+          <button class="icon-btn" title="New Profile" @click="addProfile">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
@@ -264,7 +269,7 @@ watch(
               <button
                 class="chevron"
                 :class="{ expanded: isExpanded(profile.id) }"
-                title="展開 / 收合"
+                title="Expand / Collapse"
                 @click.stop="toggleExpand(profile.id)"
               >
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -279,21 +284,27 @@ watch(
                 size="small"
                 class="rename-input"
                 @keyup.enter="commitRename"
+                @keyup.esc="cancelRename"
                 @blur="commitRename"
                 @click.stop
               />
               <template v-else>
-                <span class="profile-name" title="雙擊重新命名" @dblclick.stop="startRename(profile)">
+                <span class="profile-name" title="Double-click to rename" @dblclick.stop="startRename(profile)">
                   {{ profile.name }}
                 </span>
                 <span class="profile-count">{{ profile.records.length }}</span>
                 <span class="row-actions" @click.stop>
-                  <button class="icon-btn" title="新增記錄" @click="addRecordTo(profile.id)">
+                  <button class="icon-btn" title="Rename Profile" @click="startRename(profile)">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                    </svg>
+                  </button>
+                  <button class="icon-btn" title="New Record" @click="addRecordTo(profile.id)">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                       <path d="M12 5v14M5 12h14" />
                     </svg>
                   </button>
-                  <button class="icon-btn danger" title="刪除設定檔" @click="removeProfile(profile.id)">
+                  <button class="icon-btn danger" title="Delete Profile" @click="removeProfile(profile.id)">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
                     </svg>
@@ -314,10 +325,10 @@ watch(
                   <path d="M2 4h2v16H2V4zm4 0h1v16H6V4zm3 0h2v16H9V4zm4 0h1v16h-1V4zm3 0h2v16h-2V4zm4 0h1v16h-1V4zM13 4h1v16h-1V4z" />
                 </svg>
                 <div class="record-info">
-                  <span class="record-name">{{ record.code || `記錄 ${index + 1}` }}</span>
+                  <span class="record-name">{{ record.code || `Record ${index + 1}` }}</span>
                   <span class="record-time">{{ formatRelativeTime(record.lastUpdated) }}</span>
                 </div>
-                <button class="icon-btn record-delete" title="刪除記錄" @click.stop="removeRecord(record)">
+                <button class="icon-btn record-delete" title="Delete Record" @click.stop="removeRecord(record)">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <path d="M18 6 6 18M6 6l12 12" />
                   </svg>
@@ -328,15 +339,15 @@ watch(
         </div>
       </aside>
 
-      <!-- 右欄：目前設定檔的條碼產生器 -->
+      <!-- Right column: barcode generator for the active profile -->
       <section class="workspace">
         <div class="workspace-meta">
           <span class="profile-chip">{{ activeProfile?.name }}</span>
-          <span class="record-count">{{ activeRecords.length }} 個記錄</span>
+          <span class="record-count">{{ activeRecords.length }} {{ activeRecords.length === 1 ? 'record' : 'records' }}</span>
         </div>
 
         <div class="size-row global-size-row">
-          <span class="size-label">條碼大小</span>
+          <span class="size-label">Barcode Size</span>
           <el-slider
             v-model="barWidth"
             :min="2"
@@ -362,15 +373,15 @@ watch(
               <el-input
                 :model-value="record.code"
                 size="large"
-                placeholder="請輸入 Equipment ID，例如：EQP-A001-001"
+                placeholder="Enter Equipment ID, e.g. EQP-A001-001"
                 clearable
                 @update:model-value="(value: string) => store.setCode(record.id, value)"
                 @keyup.enter="generate(record)"
               />
               <el-button type="primary" size="large" @click="generate(record)">
-                產生條碼
+                Generate
               </el-button>
-              <el-button circle size="large" class="remove-btn" title="刪除記錄" @click="removeRecord(record)">
+              <el-button circle size="large" class="remove-btn" title="Delete Record" @click="removeRecord(record)">
                 −
               </el-button>
               <el-button
@@ -395,13 +406,13 @@ watch(
             />
           </el-card>
 
-          <!-- Result：用 v-show 讓 svg 常駐 DOM，generate() 才能立即拿到 ref 渲染 -->
+          <!-- Result: v-show keeps the svg in the DOM so generate() can resolve its ref immediately -->
           <el-card v-show="getRuntime(record.id).lastGenerated" shadow="never" class="result-card">
             <template #header>
               <div class="result-header">
-                <span>CODE128 條碼</span>
+                <span>CODE128 Barcode</span>
                 <el-button type="primary" plain size="small" @click="downloadPng(record)">
-                  下載 PNG
+                  Download PNG
                 </el-button>
               </div>
             </template>
@@ -415,7 +426,7 @@ watch(
             <svg viewBox="0 0 24 24" width="46" height="46" fill="#c0c4cc">
               <path d="M2 4h2v16H2V4zm4 0h1v16H6V4zm3 0h2v16H9V4zm4 0h1v16h-1V4zm3 0h2v16h-2V4zm4 0h1v16h-1V4zM13 4h1v16h-1V4z" />
             </svg>
-            <p>產生的條碼會顯示在這裡</p>
+            <p>The generated barcode will appear here</p>
           </div>
         </div>
       </section>
@@ -452,7 +463,7 @@ watch(
   letter-spacing: -0.5px;
 }
 
-/* 兩欄版面：設定檔目錄 (2) : 條碼產生器 (8) */
+/* Two-column layout: profile directory (2) : barcode generator (8) */
 .layout {
   flex: 1;
   width: 100%;
@@ -465,7 +476,7 @@ watch(
   align-items: start;
 }
 
-/* ---------- 左欄：Sidebar ---------- */
+/* ---------- Left column: Sidebar ---------- */
 .sidebar {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -645,7 +656,7 @@ watch(
   background: #f1f5f9;
 }
 
-/* 目前記錄改用「中性底色 + 左側色條」，與設定檔的藍色底明顯區隔，避免兩塊背景視覺上相連 */
+/* Active record: neutral background + left accent bar, clearly distinct from the profile's blue fill */
 .record-row.active {
   background: #f8fafc;
   color: #1e293b;
@@ -688,7 +699,7 @@ watch(
   display: inline-flex;
 }
 
-/* ---------- 右欄：Workspace ---------- */
+/* ---------- Right column: Workspace ---------- */
 .workspace {
   min-width: 0;
   display: flex;
@@ -778,7 +789,7 @@ watch(
   margin-bottom: 0;
 }
 
-/* 側邊欄點選的記錄會以柔光標示對應區塊 */
+/* The record clicked in the sidebar gets a soft highlight on its block */
 .barcode-group.is-active {
   box-shadow: 0 0 0 2px #bfdbfe;
 }

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import type { Profile, Record } from './model'
 
-const DEFAULT_PROFILE_NAME = '預設設定檔'
+const DEFAULT_PROFILE_NAME = 'Default Profile'
 
 function newRecord(code = ''): Record {
   return {
@@ -19,8 +19,18 @@ function newProfile(name: string): Profile {
   }
 }
 
+/** Local-time timestamp formatted as yyyyMMddHHmmss (e.g. 20260827140430), used as the default name for new profiles */
+function timestampName(): string {
+  const now = new Date()
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return (
+    `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}` +
+    `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`
+  )
+}
+
 export const useBarcodeStore = defineStore('barcode', {
-  // 首次使用時自動產生「一個預設設定檔 + 一筆空白記錄」；之後由 persistedstate 從 localStorage 還原
+  // On first use a default profile with one empty record is created; afterwards persistedstate restores from localStorage
   state: () => {
     const profile = newProfile(DEFAULT_PROFILE_NAME)
     return {
@@ -40,7 +50,7 @@ export const useBarcodeStore = defineStore('barcode', {
   },
 
   actions: {
-    /** 修復 localStorage 還原後可能出現的無效狀態（空 profiles、失效的 active id、空 records） */
+    /** Repair invalid state possibly restored from localStorage (no profiles, stale active ids, empty records) */
     ensureDefaults() {
       if (this.profiles.length === 0) {
         const profile = newProfile(DEFAULT_PROFILE_NAME)
@@ -73,7 +83,7 @@ export const useBarcodeStore = defineStore('barcode', {
     },
 
     createProfile(name?: string) {
-      const profile = newProfile(name?.trim() || `設定檔 ${this.profiles.length + 1}`)
+      const profile = newProfile(name?.trim() || timestampName())
       this.profiles.push(profile)
       this.activeProfileId = profile.id
       this.activeRecordId = profile.records[0].id
@@ -91,7 +101,7 @@ export const useBarcodeStore = defineStore('barcode', {
       if (index === -1) return
       this.profiles.splice(index, 1)
       if (this.profiles.length === 0) {
-        // 至少保留一個設定檔，符合「預設產生一個設定檔」的不變量
+        // Keep at least one profile to maintain the "always a default profile" invariant
         const profile = newProfile(DEFAULT_PROFILE_NAME)
         this.profiles.push(profile)
         this.activeProfileId = profile.id
@@ -127,7 +137,7 @@ export const useBarcodeStore = defineStore('barcode', {
         profile.records.splice(index, 1)
         const isActiveProfile = profile.id === this.activeProfileId
         if (profile.records.length === 0) {
-          // 每個設定檔至少保留一筆（空白）記錄
+          // Keep at least one (empty) record per profile
           const record = newRecord()
           profile.records.push(record)
           if (isActiveProfile) this.activeRecordId = record.id
@@ -138,7 +148,7 @@ export const useBarcodeStore = defineStore('barcode', {
       }
     },
 
-    /** 只有 code 真的改變時才更新 lastUpdated（產生條碼不經過這裡，不會影響更新時間） */
+    /** Only touch lastUpdated when the code actually changes (barcode generation bypasses this, so it never affects the update time) */
     setCode(recordId: string, code: string) {
       for (const profile of this.profiles) {
         const record = profile.records.find((item) => item.id === recordId)
