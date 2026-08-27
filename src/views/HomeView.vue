@@ -498,7 +498,11 @@ watch(
 }
 
 .profile-group {
-  margin-bottom: 2px;
+  margin-bottom: 12px;
+}
+
+.profile-group:last-child {
+  margin-bottom: 0;
 }
 
 .profile-row {
@@ -618,26 +622,34 @@ watch(
 }
 
 .record-list {
-  padding-left: 14px;
+  padding-left: 16px;
+  margin-top: 8px;
 }
 
 .record-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 8px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
   border-radius: 8px;
   cursor: pointer;
   color: #475569;
+}
+
+.record-row:last-child {
+  margin-bottom: 0;
 }
 
 .record-row:hover {
   background: #f1f5f9;
 }
 
+/* 目前記錄改用「中性底色 + 左側色條」，與設定檔的藍色底明顯區隔，避免兩塊背景視覺上相連 */
 .record-row.active {
-  background: #eef2ff;
+  background: #f8fafc;
   color: #1e293b;
+  box-shadow: inset 2px 0 0 #6366f1;
 }
 
 .record-icon {
